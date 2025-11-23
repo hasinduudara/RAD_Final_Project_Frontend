@@ -20,6 +20,11 @@ export default function LoginPage() {
             localStorage.setItem("refreshToken", data.refreshToken);
             localStorage.setItem("role", data.user.role);
 
+            // Save profile image if available
+            if (data.user.profileImage) {
+                localStorage.setItem("profileImage", data.user.profileImage);
+            }
+
             alert("Login successful!");
 
             // ROLE-BASED REDIRECT
@@ -29,8 +34,17 @@ export default function LoginPage() {
                 navigate("/home");
             }
 
-        } catch (error: any) {
-            alert(error.response?.data?.message || "Login failed");
+        } catch (error: unknown) {
+            let errorMessage = "Login failed";
+
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            } else if (typeof error === 'object' && error !== null && 'response' in error) {
+                const axiosError = error as { response?: { data?: { message?: string } } };
+                errorMessage = axiosError.response?.data?.message || "Login failed";
+            }
+
+            alert(errorMessage);
         }
     };
 

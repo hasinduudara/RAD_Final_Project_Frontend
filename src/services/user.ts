@@ -35,3 +35,38 @@ export const refreshTokens = async (refreshToken: string) => {
 
     return res.data;
 };
+
+// GET USER PROFILE
+export const getUser = async () => {
+    const res = await api.get("/user/me");
+    return res.data;
+};
+
+// UPDATE USER
+export const updateUser = async (payload: {
+    fullName?: string;
+    email?: string;
+    profileImage?: string | null;
+}) => {
+    const res = await api.put("/user/update", payload);
+    return res.data;
+};
+
+// UPLOAD PROFILE IMAGE TO IMGBB
+export const uploadProfileImage = async (file: File) => {
+    const API_KEY = import.meta.env.VITE_IMGBB_API_KEY;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
+        method: "POST",
+        body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!data.success) throw new Error("Image upload failed");
+
+    return data.data.url; // Return image URL
+};

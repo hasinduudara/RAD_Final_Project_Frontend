@@ -9,17 +9,17 @@ export default function HomePage() {
         {
             title: "HTML",
             desc: "HTML කියන්නේ website එකක මාළු骨ය වගේ. Web page එකක content ගොඩනගන markup එක මෙහෙමයි.",
-            route: "/htmlcourse",
+            route: "/html-course",
         },
         {
             title: "CSS",
             desc: "CSS එකෙන් website එකට හැඩ ගන්වන්න පුළුවන්. Colors, layouts, styles හදන්න CSS අත්‍යවශ්‍යයි.",
-            route: "/csscourses",
+            route: "/css-courses",
         },
         {
             title: "JavaScript",
             desc: "JavaScript යනු website එකට සිරිත, ක්‍රියාකාරිත්වය හා හැසිරීම ලබා දෙන programming භාෂාව.",
-            route: "/courses/javascript",
+            route: "/javascript-courses",
         },
     ];
 

@@ -12,6 +12,7 @@ import ProfilePage from "../pages/ProfilePage";
 import ChatPage from "../pages/ChatPage.tsx";
 import HtmlCourse from "../components/html/HtmlCourse.tsx";
 import CssCourse from "../components/css/CssCourse.tsx";
+import JsCourse from "../components/js/JsCourse.tsx";
 
 export default function AppRoutes() {
     return (
@@ -58,7 +59,7 @@ export default function AppRoutes() {
                 }
             />
             <Route
-                path="/htmlcourse"
+                path="/html-course"
                 element={
                     <ProtectedRoute>
                         <HtmlCourse />
@@ -66,10 +67,18 @@ export default function AppRoutes() {
                 }
             />
             <Route
-                path="/csscourses"
+                path="/css-courses"
                 element={
                     <ProtectedRoute>
                         <CssCourse />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/javascript-courses"
+                element={
+                    <ProtectedRoute>
+                        <JsCourse />
                     </ProtectedRoute>
                 }
             />

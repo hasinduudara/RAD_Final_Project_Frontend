@@ -70,3 +70,17 @@ export const uploadProfileImage = async (file: File) => {
 
     return data.data.url; // Return image URL
 };
+
+// GET ALL USERS
+export const getAllUsers = async () => {
+    const res = await api.get("/user/all");
+    return res.data; // Expected { success: true, users: [] }
+};
+
+// DELETE USER
+export const deleteUser = async (id: string, reason: string) => {
+    const res = await api.delete(`/user/delete/${id}`, {
+        data: { reason } // Send reason in body
+    });
+    return res.data;
+};

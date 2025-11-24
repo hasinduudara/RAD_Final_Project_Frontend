@@ -14,7 +14,7 @@ export default function HomePage() {
         {
             title: "CSS",
             desc: "CSS එකෙන් website එකට හැඩ ගන්වන්න පුළුවන්. Colors, layouts, styles හදන්න CSS අත්‍යවශ්‍යයි.",
-            route: "/courses/css",
+            route: "/csscourses",
         },
         {
             title: "JavaScript",

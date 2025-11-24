@@ -11,6 +11,7 @@ import ProtectedRoute from "../routes/ProtectedRoute";
 import ProfilePage from "../pages/ProfilePage";
 import ChatPage from "../pages/ChatPage.tsx";
 import HtmlCourse from "../components/html/HtmlCourse.tsx";
+import CssCourse from "../components/css/CssCourse.tsx";
 
 export default function AppRoutes() {
     return (
@@ -61,6 +62,14 @@ export default function AppRoutes() {
                 element={
                     <ProtectedRoute>
                         <HtmlCourse />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/csscourses"
+                element={
+                    <ProtectedRoute>
+                        <CssCourse />
                     </ProtectedRoute>
                 }
             />

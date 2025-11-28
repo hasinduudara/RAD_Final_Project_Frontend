@@ -84,3 +84,13 @@ export const deleteUser = async (id: string, reason: string) => {
     });
     return res.data;
 };
+
+// CREATE NEW ADMIN (New Function)
+export const createAdmin = async (fullName: string, email: string, password: string) => {
+    const res = await api.post("/user/create-admin", {
+        fullName,
+        email,
+        password
+    });
+    return res.data;
+};

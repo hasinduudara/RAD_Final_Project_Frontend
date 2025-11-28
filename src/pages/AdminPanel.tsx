@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     User, Mail, Camera, Trash2, Shield,
-    Search, LogOut, Lock, Loader2
+    Search, LogOut, Lock, Loader2, UserPlus, X
 } from "lucide-react";
 import {
     getUser, updateUser, uploadProfileImage,
-    getAllUsers, deleteUser
+    getAllUsers, deleteUser, createAdmin
 } from "../services/user";
-import toast from "react-hot-toast"; // Assuming you have toast, or use alert
+import toast from "react-hot-toast";
 
 // Interfaces
 interface UserProfile {
@@ -32,6 +32,11 @@ export default function AdminPanel() {
     const [activeTab, setActiveTab] = useState<"USER" | "ADMIN">("USER");
     const [searchTerm, setSearchTerm] = useState("");
 
+    // State for Add Admin Modal
+    const [showAddAdminModal, setShowAddAdminModal] = useState(false);
+    const [newAdmin, setNewAdmin] = useState({ fullName: "", email: "", password: "" });
+    const [creatingAdmin, setCreatingAdmin] = useState(false);
+
     // 1. Fetch Data on Mount
     useEffect(() => {
         fetchData();
@@ -40,11 +45,9 @@ export default function AdminPanel() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            // Fetch current admin profile
             const profileRes = await getUser();
             if (profileRes.success) setProfile(profileRes.user);
 
-            // Fetch all users
             const usersRes = await getAllUsers();
             if (usersRes.success) setUsers(usersRes.users);
 
@@ -64,11 +67,7 @@ export default function AdminPanel() {
         try {
             setUploading(true);
             const url = await uploadProfileImage(file);
-
-            // Update immediately in backend
             await updateUser({ profileImage: url });
-
-            // Update local state
             setProfile(prev => prev ? { ...prev, profileImage: url } : null);
             toast.success("Profile image updated!");
         } catch {
@@ -82,12 +81,8 @@ export default function AdminPanel() {
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!profile) return;
-
         try {
-            await updateUser({
-                fullName: profile.fullName,
-                email: profile.email
-            });
+            await updateUser({ fullName: profile.fullName, email: profile.email });
             toast.success("Profile details updated!");
         } catch {
             toast.error("Failed to update profile");
@@ -96,20 +91,42 @@ export default function AdminPanel() {
 
     // 4. Handle Delete User
     const handleDelete = async (id: string, role: string) => {
-        if (id === profile?._id) {
-            return toast.error("You cannot delete yourself!");
-        }
+        if (id === profile?._id) return toast.error("You cannot delete yourself!");
 
         const reason = prompt(`Deleting ${role}. Please enter a reason (this will be emailed to them):`);
         if (!reason) return;
 
         try {
             await deleteUser(id, reason);
-            // Remove from local list
             setUsers(prev => prev.filter(u => u._id !== id));
             toast.success("User removed and email sent.");
         } catch {
             toast.error("Failed to delete user");
+        }
+    };
+
+    // 5. Handle Create Admin
+    const handleCreateAdmin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newAdmin.fullName || !newAdmin.email || !newAdmin.password) {
+            return toast.error("All fields are required");
+        }
+
+        try {
+            setCreatingAdmin(true);
+            const res = await createAdmin(newAdmin.fullName, newAdmin.email, newAdmin.password);
+
+            if (res.success) {
+                toast.success("New Admin created successfully!");
+                // Add new admin to the list locally so we see it immediately
+                setUsers(prev => [...prev, { ...res.user, _id: res.user._id || Math.random().toString() }]);
+                setShowAddAdminModal(false);
+                setNewAdmin({ fullName: "", email: "", password: "" });
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to create admin");
+        } finally {
+            setCreatingAdmin(false);
         }
     };
 
@@ -122,7 +139,7 @@ export default function AdminPanel() {
     if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Loading Admin Panel...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-950 p-6 text-slate-200">
+        <div className="min-h-screen bg-slate-950 p-6 text-slate-200 relative">
             <div className="max-w-6xl mx-auto space-y-8">
 
                 {/* Header */}
@@ -138,7 +155,7 @@ export default function AdminPanel() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                    {/* LEFT COLUMN: Admin Profile Settings */}
+                    {/* LEFT COLUMN: My Profile */}
                     <div className="lg:col-span-1 space-y-6">
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl sticky top-6">
                             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
@@ -146,7 +163,6 @@ export default function AdminPanel() {
                             </h2>
 
                             <form onSubmit={handleUpdateProfile} className="space-y-4">
-                                {/* Image Upload */}
                                 <div className="flex flex-col items-center mb-6">
                                     <div className="relative group cursor-pointer w-24 h-24">
                                         <img
@@ -162,7 +178,6 @@ export default function AdminPanel() {
                                     <p className="text-xs text-slate-500 mt-2">Click image to change</p>
                                 </div>
 
-                                {/* Inputs */}
                                 <div className="space-y-1">
                                     <label className="text-xs font-semibold text-slate-400 uppercase">Display Name</label>
                                     <input
@@ -190,7 +205,6 @@ export default function AdminPanel() {
                                     Save Changes
                                 </button>
                             </form>
-
                             <div className="mt-6 pt-6 border-t border-slate-800">
                                 <button
                                     onClick={() => navigate("/forgot-password")}
@@ -202,7 +216,7 @@ export default function AdminPanel() {
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: User Management */}
+                    {/* RIGHT COLUMN: User/Admin Management */}
                     <div className="lg:col-span-2 space-y-6">
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl min-h-[500px]">
 
@@ -224,22 +238,34 @@ export default function AdminPanel() {
                                 </div>
                             </div>
 
-                            {/* Tabs */}
-                            <div className="flex gap-4 border-b border-slate-800 mb-6">
-                                <button
-                                    onClick={() => setActiveTab("USER")}
-                                    className={`pb-3 px-1 text-sm font-medium transition-colors relative ${activeTab === "USER" ? "text-emerald-400" : "text-slate-400 hover:text-slate-200"}`}
-                                >
-                                    Students / Users
-                                    {activeTab === "USER" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-400 rounded-t-full"></div>}
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("ADMIN")}
-                                    className={`pb-3 px-1 text-sm font-medium transition-colors relative ${activeTab === "ADMIN" ? "text-blue-400" : "text-slate-400 hover:text-slate-200"}`}
-                                >
-                                    Administrators
-                                    {activeTab === "ADMIN" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-400 rounded-t-full"></div>}
-                                </button>
+                            {/* Tabs & Add Button */}
+                            <div className="flex justify-between items-center border-b border-slate-800 mb-6">
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={() => setActiveTab("USER")}
+                                        className={`pb-3 px-1 text-sm font-medium transition-colors relative ${activeTab === "USER" ? "text-emerald-400" : "text-slate-400 hover:text-slate-200"}`}
+                                    >
+                                        Students
+                                        {activeTab === "USER" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-400 rounded-t-full"></div>}
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("ADMIN")}
+                                        className={`pb-3 px-1 text-sm font-medium transition-colors relative ${activeTab === "ADMIN" ? "text-blue-400" : "text-slate-400 hover:text-slate-200"}`}
+                                    >
+                                        Administrators
+                                        {activeTab === "ADMIN" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-400 rounded-t-full"></div>}
+                                    </button>
+                                </div>
+
+                                {/* Add Admin Button (Only visible on Admin tab) */}
+                                {activeTab === "ADMIN" && (
+                                    <button
+                                        onClick={() => setShowAddAdminModal(true)}
+                                        className="mb-2 flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg transition-colors shadow-lg shadow-blue-500/20"
+                                    >
+                                        <UserPlus className="w-3 h-3" /> Add Admin
+                                    </button>
+                                )}
                             </div>
 
                             {/* List */}
@@ -285,6 +311,66 @@ export default function AdminPanel() {
                     </div>
 
                 </div>
+
+                {/* ADD ADMIN MODAL */}
+                {showAddAdminModal && (
+                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+                            <button
+                                onClick={() => setShowAddAdminModal(false)}
+                                className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+
+                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                <Shield className="w-5 h-5 text-blue-400" /> Create New Admin
+                            </h2>
+
+                            <form onSubmit={handleCreateAdmin} className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-400 uppercase">Full Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-blue-500 outline-none mt-1 transition-colors"
+                                        value={newAdmin.fullName}
+                                        onChange={e => setNewAdmin({...newAdmin, fullName: e.target.value})}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-400 uppercase">Email</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-blue-500 outline-none mt-1 transition-colors"
+                                        value={newAdmin.email}
+                                        onChange={e => setNewAdmin({...newAdmin, email: e.target.value})}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-400 uppercase">Password</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-blue-500 outline-none mt-1 transition-colors"
+                                        value={newAdmin.password}
+                                        onChange={e => setNewAdmin({...newAdmin, password: e.target.value})}
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={creatingAdmin}
+                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-lg transition-colors mt-2 shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {creatingAdmin ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin"/> Creating...</span> : "Create Admin Account"}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
             </div>
         </div>
     );

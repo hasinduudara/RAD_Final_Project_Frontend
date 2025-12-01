@@ -30,10 +30,6 @@ export default function ChatList({ chats, setChats, onSelect, onNewChat, activeC
 
             // 4. Update UI immediately
             setChats((prevChats) => prevChats.filter((c) => c._id !== id));
-
-            // Optional: If the deleted chat was the active one, you might want to clear the view
-            if (activeChatId === id) {
-            }
         } catch {
             alert("Failed to delete chat");
         }

@@ -1,51 +1,13 @@
-import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
+import { useUser } from "../context/userContext";
 
 export default function Header() {
     const navigate = useNavigate();
-    const location = useLocation();
-    const [profileImage, setProfileImage] = useState<string | null>(null);
-
-    useEffect(() => {
-        // Load profile image from localStorage
-        const loadProfileImage = () => {
-            const savedImage = localStorage.getItem("profileImage");
-            setProfileImage(savedImage);
-        };
-
-        // Load on mount and when location changes
-        loadProfileImage();
-
-        // Listen for storage changes (when localStorage is updated)
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === "profileImage") {
-                setProfileImage(e.newValue);
-            }
-        };
-
-        // Listen for custom event (for same-tab updates)
-        const handleProfileUpdate = () => {
-            loadProfileImage();
-        };
-
-        window.addEventListener("storage", handleStorageChange);
-        window.addEventListener("profileImageUpdated", handleProfileUpdate);
-
-        return () => {
-            window.removeEventListener("storage", handleStorageChange);
-            window.removeEventListener("profileImageUpdated", handleProfileUpdate);
-        };
-    }, [location]);
+    const { user, logout } = useUser();
 
     const handleLogout = () => {
-        // Remove tokens
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("role");
-        localStorage.removeItem("profileImage");
-
-        // Redirect to login
+        logout();
         navigate("/login");
     };
 
@@ -80,11 +42,11 @@ export default function Header() {
                     className="cursor-pointer"
                     onClick={() => navigate("/profile")}
                 >
-                    {profileImage ? (
+                    {user?.profileImage ? (
                         <img
-                            src={profileImage}
+                            src={user.profileImage}
                             alt="Profile"
-                            className="w-10 h-10 rounded-full border border-gray-600"
+                            className="w-10 h-10 rounded-full border border-gray-600 object-cover"
                         />
                     ) : (
                         <div className="w-10 h-10 flex items-center justify-center bg-gray-700 rounded-full">

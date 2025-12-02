@@ -5,10 +5,11 @@ import {
     Search, LogOut, Lock, Loader2, UserPlus, X
 } from "lucide-react";
 import {
-    getUser, updateUser, uploadProfileImage,
+    updateUser, uploadProfileImage,
     getAllUsers, deleteUser, createAdmin
 } from "../services/user";
 import toast from "react-hot-toast";
+import { useUser } from "../context/userContext";
 
 // Interfaces
 interface UserProfile {
@@ -21,9 +22,9 @@ interface UserProfile {
 
 export default function AdminPanel() {
     const navigate = useNavigate();
+    const { user, loading: userLoading, logout, updateProfileImage } = useUser();
 
     // State for Admin Profile
-    const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
 
@@ -45,9 +46,6 @@ export default function AdminPanel() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const profileRes = await getUser();
-            if (profileRes.success) setProfile(profileRes.user);
-
             const usersRes = await getAllUsers();
             if (usersRes.success) setUsers(usersRes.users);
 
@@ -68,7 +66,7 @@ export default function AdminPanel() {
             setUploading(true);
             const url = await uploadProfileImage(file);
             await updateUser({ profileImage: url });
-            setProfile(prev => prev ? { ...prev, profileImage: url } : null);
+            updateProfileImage(url);
             toast.success("Profile image updated!");
         } catch {
             toast.error("Image upload failed");
@@ -80,9 +78,9 @@ export default function AdminPanel() {
     // 3. Handle Profile Info Update
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!profile) return;
+        if (!user) return;
         try {
-            await updateUser({ fullName: profile.fullName, email: profile.email });
+            await updateUser({ fullName: user.fullName, email: user.email });
             toast.success("Profile details updated!");
         } catch {
             toast.error("Failed to update profile");
@@ -91,7 +89,7 @@ export default function AdminPanel() {
 
     // 4. Handle Delete User
     const handleDelete = async (id: string, role: string) => {
-        if (id === profile?._id) return toast.error("You cannot delete yourself!");
+        if (id === user?.id) return toast.error("You cannot delete yourself!");
 
         const reason = prompt(`Deleting ${role}. Please enter a reason (this will be emailed to them):`);
         if (!reason) return;
@@ -123,20 +121,19 @@ export default function AdminPanel() {
                 setShowAddAdminModal(false);
                 setNewAdmin({ fullName: "", email: "", password: "" });
             }
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Failed to create admin");
+        } catch {
+            toast.error("Failed to create admin");
         } finally {
             setCreatingAdmin(false);
         }
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        logout();
         navigate("/login");
     };
 
-    if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Loading Admin Panel...</div>;
+    if (loading || userLoading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Loading Admin Panel...</div>;
 
     return (
         <div className="min-h-screen bg-slate-950 p-6 text-slate-200 relative">
@@ -166,7 +163,7 @@ export default function AdminPanel() {
                                 <div className="flex flex-col items-center mb-6">
                                     <div className="relative group cursor-pointer w-24 h-24">
                                         <img
-                                            src={profile?.profileImage || "https://via.placeholder.com/150"}
+                                            src={user?.profileImage || "https://via.placeholder.com/150"}
                                             alt="Profile"
                                             className="w-full h-full rounded-full border-4 border-slate-800 object-cover group-hover:border-blue-500 transition-colors"
                                         />
@@ -182,8 +179,8 @@ export default function AdminPanel() {
                                     <label className="text-xs font-semibold text-slate-400 uppercase">Display Name</label>
                                     <input
                                         type="text"
-                                        value={profile?.fullName || ""}
-                                        onChange={(e) => setProfile(prev => prev ? {...prev, fullName: e.target.value} : null)}
+                                        value={user?.fullName || ""}
+                                        readOnly
                                         className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
                                     />
                                 </div>
@@ -194,8 +191,8 @@ export default function AdminPanel() {
                                         <Mail className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
                                         <input
                                             type="email"
-                                            value={profile?.email || ""}
-                                            onChange={(e) => setProfile(prev => prev ? {...prev, email: e.target.value} : null)}
+                                            value={user?.email || ""}
+                                            readOnly
                                             className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 pl-10 text-white focus:outline-none focus:border-blue-500 transition-colors"
                                         />
                                     </div>

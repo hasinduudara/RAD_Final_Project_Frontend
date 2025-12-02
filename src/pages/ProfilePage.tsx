@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
-import { getUser, updateUser, uploadProfileImage } from "../services/user";
+import { updateUser, uploadProfileImage } from "../services/user";
 import { getCourseProgress } from "../services/course";
+import { useUser } from "../context/userContext";
 
 interface CourseProgress {
     id: string;
@@ -10,48 +11,26 @@ interface CourseProgress {
 }
 
 export default function ProfilePage() {
+    const { user, updateProfileImage } = useUser();
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState<CourseProgress[]>([]);
 
     useEffect(() => {
+        if (user) {
+            setFullName(user.fullName);
+            setEmail(user.email);
+        }
+    }, [user]);
+
+    useEffect(() => {
         (async () => {
             try {
-                // First check localStorage immediately
-                const cachedImage = localStorage.getItem("profileImage");
-                console.log("Cached profile image from localStorage:", cachedImage);
-                if (cachedImage) {
-                    setSelectedImage(cachedImage);
-                }
-
-                // Then fetch from backend
-                const response = await getUser();
-                console.log("Full API response:", JSON.stringify(response, null, 2));
-
-                // Handle nested user object
-                const user = response.user || response;
-                console.log("User object:", JSON.stringify(user, null, 2));
-
-                setFullName(user.fullName || "");
-                setEmail(user.email || "");
-
-                if (user.profileImage) {
-                    console.log("Profile image URL from backend:", user.profileImage);
-                    setSelectedImage(user.profileImage);
-                    localStorage.setItem("profileImage", user.profileImage);
-                } else {
-                    console.log("No profile image in backend response");
-                    console.log("All user keys:", Object.keys(user));
-                    // Keep the cached image if backend doesn't have it
-                    // Don't clear localStorage or selectedImage
-                }
-
                 const courseData = await getCourseProgress();
                 setProgress(courseData);
             } catch (error) {
-                console.error("Error loading user data:", error);
+                console.error("Error loading course progress:", error);
             }
         })();
     }, []);
@@ -64,7 +43,6 @@ export default function ProfilePage() {
         try {
             const url = await uploadProfileImage(file);
             console.log("Uploaded image URL:", url);
-            setSelectedImage(url);
 
             // Automatically save the profile image to the backend
             const response = await updateUser({ fullName, email, profileImage: url });
@@ -74,11 +52,8 @@ export default function ProfilePage() {
             if (response.success) {
                 const updatedUser = response.user;
                 if (updatedUser.profileImage) {
-                    setSelectedImage(updatedUser.profileImage);
-                    // Save to localStorage so it persists across navigation
-                    localStorage.setItem("profileImage", updatedUser.profileImage);
-                    // Dispatch event to notify Header component
-                    window.dispatchEvent(new Event("profileImageUpdated"));
+                    // Update context and localStorage
+                    updateProfileImage(updatedUser.profileImage);
                     console.log("Profile image saved to backend and localStorage:", updatedUser.profileImage);
                 }
             }
@@ -94,17 +69,9 @@ export default function ProfilePage() {
 
     const handleSave = async () => {
         try {
-            const response = await updateUser({ fullName, email, profileImage: selectedImage });
+            const response = await updateUser({ fullName, email, profileImage: user?.profileImage });
             console.log("Save response:", response);
             if (response.success) {
-                // Update localStorage with the saved profile image
-                if (selectedImage) {
-                    localStorage.setItem("profileImage", selectedImage);
-                } else {
-                    localStorage.removeItem("profileImage");
-                }
-                // Dispatch event to notify Header component
-                window.dispatchEvent(new Event("profileImageUpdated"));
                 alert("Profile updated successfully");
             }
         } catch (error) {
@@ -127,19 +94,18 @@ export default function ProfilePage() {
 
                     {uploading && <p className="mt-2 text-sm text-yellow-400">Uploading...</p>}
 
-                    {selectedImage && (
+                    {user?.profileImage && (
                         <div>
                             <img
-                                src={selectedImage}
+                                src={user.profileImage}
                                 alt="Profile"
                                 className="w-32 h-32 rounded-full mt-4 border border-gray-700 object-cover"
                                 onError={(e) => {
-                                    console.error("Failed to load image:", selectedImage);
+                                    console.error("Failed to load image:", user.profileImage);
                                     console.error("Image load error event:", e);
-                                    // Don't hide - show a placeholder or keep trying
                                 }}
                                 onLoad={() => {
-                                    console.log("Image loaded successfully:", selectedImage);
+                                    console.log("Image loaded successfully:", user.profileImage);
                                 }}
                             />
                         </div>

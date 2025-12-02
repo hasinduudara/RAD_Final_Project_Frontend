@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Header from "../components/Header";
 import { updateUser, uploadProfileImage } from "../services/user";
 import { getCourseProgress } from "../services/course";
-import { useUser } from "../context/userContext";
+import { updateProfileImage as updateProfileImageAction } from "../context/userContext";
+import type { RootState, AppDispatch } from "../context/userContext";
 
 interface CourseProgress {
     id: string;
@@ -11,7 +13,8 @@ interface CourseProgress {
 }
 
 export default function ProfilePage() {
-    const { user, updateProfileImage } = useUser();
+    const dispatch = useDispatch<AppDispatch>();
+    const user = useSelector((state: RootState) => state.user.user);
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [uploading, setUploading] = useState(false);
@@ -52,8 +55,8 @@ export default function ProfilePage() {
             if (response.success) {
                 const updatedUser = response.user;
                 if (updatedUser.profileImage) {
-                    // Update context and localStorage
-                    updateProfileImage(updatedUser.profileImage);
+                    // Update Redux store and localStorage
+                    dispatch(updateProfileImageAction(updatedUser.profileImage));
                     console.log("Profile image saved to backend and localStorage:", updatedUser.profileImage);
                 }
             }

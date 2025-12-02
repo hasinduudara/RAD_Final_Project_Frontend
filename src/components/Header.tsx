@@ -1,13 +1,16 @@
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { User } from "lucide-react";
-import { useUser } from "../context/userContext";
+import { logout as logoutAction } from "../context/userContext";
+import type { RootState, AppDispatch } from "../context/userContext";
 
 export default function Header() {
     const navigate = useNavigate();
-    const { user, logout } = useUser();
+    const dispatch = useDispatch<AppDispatch>();
+    const user = useSelector((state: RootState) => state.user.user);
 
     const handleLogout = () => {
-        logout();
+        dispatch(logoutAction());
         navigate("/login");
     };
 

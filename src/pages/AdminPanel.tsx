@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
     User, Mail, Camera, Trash2, Shield,
     Search, LogOut, Lock, Loader2, UserPlus, X
@@ -9,7 +10,11 @@ import {
     getAllUsers, deleteUser, createAdmin
 } from "../services/user";
 import toast from "react-hot-toast";
-import { useUser } from "../context/userContext";
+import {
+    logout as logoutAction,
+    updateProfileImage as updateProfileImageAction
+} from "../context/userContext";
+import type { RootState, AppDispatch } from "../context/userContext";
 
 // Interfaces
 interface UserProfile {
@@ -22,7 +27,9 @@ interface UserProfile {
 
 export default function AdminPanel() {
     const navigate = useNavigate();
-    const { user, loading: userLoading, logout, updateProfileImage } = useUser();
+    const dispatch = useDispatch<AppDispatch>();
+    const user = useSelector((state: RootState) => state.user.user);
+    const userLoading = useSelector((state: RootState) => state.user.loading);
 
     // State for Admin Profile
     const [loading, setLoading] = useState(true);
@@ -66,7 +73,7 @@ export default function AdminPanel() {
             setUploading(true);
             const url = await uploadProfileImage(file);
             await updateUser({ profileImage: url });
-            updateProfileImage(url);
+            dispatch(updateProfileImageAction(url));
             toast.success("Profile image updated!");
         } catch {
             toast.error("Image upload failed");
@@ -129,7 +136,7 @@ export default function AdminPanel() {
     };
 
     const handleLogout = () => {
-        logout();
+        dispatch(logoutAction());
         navigate("/login");
     };
 

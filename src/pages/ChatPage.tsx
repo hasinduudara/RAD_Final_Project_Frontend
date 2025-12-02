@@ -1,35 +1,26 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import ChatList from "../components/ChatList";
 import ChatWindow from "../components/ChatWindow";
-import Header from "../components/Header"; // Assuming this is where your Header is
-import { createChat, getChats } from "../services/chat";
-
-interface ChatItem {
-    _id: string;
-    title: string;
-}
+import Header from "../components/Header";
+import { fetchChats, createNewChat, setCurrentChat } from "../context/userContext";
+import type { AppDispatch, RootState } from "../context/userContext";
 
 export default function ChatPage() {
-    const [currentChat, setCurrentChat] = useState("");
-    const [chats, setChats] = useState<ChatItem[]>([]);
+    const dispatch = useDispatch<AppDispatch>();
+    const { chats, currentChatId } = useSelector((state: RootState) => state.chat);
 
     // Load chat list on mount
     useEffect(() => {
-        const loadChatList = async () => {
-            const token = localStorage.getItem("accessToken")!;
-            const data = await getChats(token);
-            setChats(data);
-        };
-        loadChatList();
-    }, []);
+        dispatch(fetchChats());
+    }, [dispatch]);
 
-    const handleNewChat = async () => {
-        const token = localStorage.getItem("accessToken")!;
-        const chat = await createChat(token);
+    const handleNewChat = () => {
+        dispatch(createNewChat());
+    };
 
-        // Add new chat to the list immediately
-        setChats([chat, ...chats]);
-        setCurrentChat(chat._id);
+    const handleSelectChat = (id: string) => {
+        dispatch(setCurrentChat(id));
     };
 
     return (
@@ -46,17 +37,16 @@ export default function ChatPage() {
                 <div className="flex-none w-64 border-r border-gray-700 bg-gray-800">
                     <ChatList
                         chats={chats}
-                        setChats={setChats}
-                        onSelect={setCurrentChat}
-                        onNewChat={handleNewChat} // Passing the function down
-                        activeChatId={currentChat}
+                        onSelect={handleSelectChat}
+                        onNewChat={handleNewChat}
+                        activeChatId={currentChatId || ""}
                     />
                 </div>
 
                 {/* Chat Area */}
                 <div className="flex-1 flex flex-col bg-gray-900 relative">
-                    {currentChat ? (
-                        <ChatWindow chatId={currentChat} />
+                    {currentChatId ? (
+                        <ChatWindow chatId={currentChatId} />
                     ) : (
                         <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
                             <h2 className="text-2xl font-semibold mb-2">Welcome to LanguageHub AI</h2>

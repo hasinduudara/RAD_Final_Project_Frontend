@@ -1,55 +1,47 @@
 import { useEffect, useState, useRef } from "react";
-import { loadChat, sendMessage } from "../services/chat";
-
-interface Message {
-    role: string;
-    content: string;
-}
-
-interface Chat {
-    messages: Message[];
-}
+import { useDispatch, useSelector } from "react-redux";
+import { sendMessage } from "../services/chat";
+import { fetchChatMessages, updateChatMessages, setSendingMessage } from "../context/userContext";
+import type { AppDispatch, RootState } from "../context/userContext";
 
 export default function ChatWindow({ chatId }: { chatId: string }) {
-    const [chat, setChat] = useState<Chat | null>(null);
+    const dispatch = useDispatch<AppDispatch>();
+    const { currentChatMessages, sendingMessage } = useSelector((state: RootState) => state.chat);
     const [input, setInput] = useState("");
-    const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (chatId) {
-            const token = localStorage.getItem("accessToken")!;
-            loadChat(token, chatId).then(setChat);
+            dispatch(fetchChatMessages(chatId));
         }
-    }, [chatId]);
+    }, [chatId, dispatch]);
 
     // Auto-scroll to bottom when messages change
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [chat]);
+    }, [currentChatMessages]);
 
     const handleSend = async () => {
         if (!input.trim()) return;
 
-        setLoading(true);
+        dispatch(setSendingMessage(true));
         const token = localStorage.getItem("accessToken")!;
 
-        // Optimistic UI update (optional: show user message immediately)
-        // For now, we wait for response to keep logic simple based on your code
+        try {
+            const response = await sendMessage(token, chatId, input);
 
-        const response = await sendMessage(token, chatId, input);
+            // Update Redux store with new messages
+            if (response.chat && response.chat.messages) {
+                dispatch(updateChatMessages(response.chat.messages));
+            }
 
-        // Clean AI response
-        if(response.chat && response.chat.messages) {
-            response.chat.messages = response.chat.messages.map((m: Message) => ({
-                ...m,
-                content: m.content.replace(/[*_`~]/g, "").trim()
-            }));
-            setChat(response.chat);
+            setInput("");
+        } catch (error) {
+            console.error("Failed to send message:", error);
+            alert("Failed to send message");
+        } finally {
+            dispatch(setSendingMessage(false));
         }
-
-        setInput("");
-        setLoading(false);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -59,14 +51,16 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
         }
     };
 
-    if (!chat) return <div className="flex-1 flex items-center justify-center text-gray-500">Loading chat...</div>;
+    if (currentChatMessages.length === 0 && !sendingMessage) {
+        return <div className="flex-1 flex items-center justify-center text-gray-500">Loading chat...</div>;
+    }
 
     return (
         <div className="flex flex-col h-full relative">
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
-                {chat.messages.map((msg: Message, i: number) => (
+                {currentChatMessages.map((msg, i: number) => (
                     <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                         <div
                             className={`max-w-[80%] p-3 rounded-lg text-sm leading-relaxed ${
@@ -80,7 +74,7 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
                     </div>
                 ))}
 
-                {loading && (
+                {sendingMessage && (
                     <div className="flex justify-start animate-pulse">
                         <div className="bg-gray-700 p-3 rounded-lg text-gray-400 italic text-sm">
                             AI is typing...
@@ -99,13 +93,13 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
                         onKeyDown={handleKeyDown}
                         className="flex-1 p-3 pr-12 rounded-md bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 transition-colors"
                         placeholder="Type your message..."
-                        disabled={loading}
+                        disabled={sendingMessage}
                     />
                     <button
                         onClick={handleSend}
-                        disabled={loading}
+                        disabled={sendingMessage}
                         className={`px-4 py-3 rounded-md font-semibold transition-colors ${
-                            loading
+                            sendingMessage
                                 ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                                 : "bg-green-600 hover:bg-green-700 text-white"
                         }`}

@@ -1,19 +1,16 @@
-import { deleteChat as apiDeleteChat } from "../services/chat";
-
-interface ChatItem {
-    _id: string;
-    title: string;
-}
+import { useDispatch } from "react-redux";
+import { deleteChat as deleteChatAction } from "../context/userContext";
+import type { AppDispatch, Chat } from "../context/userContext";
 
 interface ChatListProps {
-    chats: ChatItem[];
-    setChats: React.Dispatch<React.SetStateAction<ChatItem[]>>;
+    chats: Chat[];
     onSelect: (id: string) => void;
-    onNewChat: () => void; // Make sure this is passed from ChatPage
+    onNewChat: () => void;
     activeChatId: string;
 }
 
-export default function ChatList({ chats, setChats, onSelect, onNewChat, activeChatId }: ChatListProps) {
+export default function ChatList({ chats, onSelect, onNewChat, activeChatId }: ChatListProps) {
+    const dispatch = useDispatch<AppDispatch>();
 
     const handleDelete = async (e: React.MouseEvent, id: string) => {
         // 1. Stop the click from bubbling up to the parent div (which opens the chat)
@@ -23,13 +20,8 @@ export default function ChatList({ chats, setChats, onSelect, onNewChat, activeC
         if (!confirm("Are you sure you want to delete this chat?")) return;
 
         try {
-            const token = localStorage.getItem("accessToken")!;
-
-            // 3. Call your existing API service
-            await apiDeleteChat(token, id);
-
-            // 4. Update UI immediately
-            setChats((prevChats) => prevChats.filter((c) => c._id !== id));
+            // 3. Dispatch Redux action to delete chat
+            await dispatch(deleteChatAction(id)).unwrap();
         } catch {
             alert("Failed to delete chat");
         }

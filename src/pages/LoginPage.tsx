@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "../services/user.ts"; // ⬅ import service
+import { useDispatch } from "react-redux";
+import { login } from "../services/user.ts";
+import { setUser } from "../context/userContext.tsx";
+import type { AppDispatch, User } from "../context/userContext.tsx";
 
 export default function LoginPage() {
     const navigate = useNavigate();
+    const dispatch = useDispatch<AppDispatch>();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -24,6 +28,16 @@ export default function LoginPage() {
             if (data.user.profileImage) {
                 localStorage.setItem("profileImage", data.user.profileImage);
             }
+
+            // Update Redux store
+            const userObj: User = {
+                id: data.user.id || data.user._id,
+                fullName: data.user.fullName,
+                email: data.user.email,
+                role: data.user.role,
+                profileImage: data.user.profileImage,
+            };
+            dispatch(setUser(userObj));
 
             alert("Login successful!");
 

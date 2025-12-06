@@ -5,6 +5,7 @@ import { updateUser, uploadProfileImage } from "../services/user";
 import { getCourseProgress } from "../services/course";
 import { updateProfileImage as updateProfileImageAction } from "../context/userContext";
 import type { RootState, AppDispatch } from "../context/userContext";
+import CertificateDownloader from "../components/CertificateDownloader";
 
 interface CourseProgress {
     id: string;
@@ -47,17 +48,13 @@ export default function ProfilePage() {
             const url = await uploadProfileImage(file);
             console.log("Uploaded image URL:", url);
 
-            // Automatically save the profile image to the backend
             const response = await updateUser({ fullName, email, profileImage: url });
             console.log("Update response:", response);
 
-            // Verify the update was successful
             if (response.success) {
                 const updatedUser = response.user;
                 if (updatedUser.profileImage) {
-                    // Update Redux store and localStorage
                     dispatch(updateProfileImageAction(updatedUser.profileImage));
-                    console.log("Profile image saved to backend and localStorage:", updatedUser.profileImage);
                 }
             }
 
@@ -103,13 +100,6 @@ export default function ProfilePage() {
                                 src={user.profileImage}
                                 alt="Profile"
                                 className="w-32 h-32 rounded-full mt-4 border border-gray-700 object-cover"
-                                onError={(e) => {
-                                    console.error("Failed to load image:", user.profileImage);
-                                    console.error("Image load error event:", e);
-                                }}
-                                onLoad={() => {
-                                    console.log("Image loaded successfully:", user.profileImage);
-                                }}
                             />
                         </div>
                     )}
@@ -164,16 +154,30 @@ export default function ProfilePage() {
                     <div className="space-y-4">
                         {progress.map((c) => (
                             <div key={c.id} className="p-4 bg-gray-800 rounded-xl border border-gray-700">
-                                <div className="flex justify-between mb-1">
-                                    <span className="font-semibold">{c.courseName}</span>
-                                    <span>{c.percentage}%</span>
+                                <div className="flex justify-between mb-1 items-end">
+                                    <div>
+                                        <span className="font-semibold block">{c.courseName}</span>
+                                        {c.percentage === 100 && (
+                                            <span className="text-xs text-green-400 font-bold">Course Completed</span>
+                                        )}
+                                    </div>
+                                    <span className="text-sm text-gray-300">{c.percentage}%</span>
                                 </div>
-                                <div className="w-full h-2 bg-gray-700 rounded">
+
+                                <div className="w-full h-2 bg-gray-700 rounded mb-2">
                                     <div
                                         className="h-2 bg-green-500 rounded"
                                         style={{ width: `${c.percentage}%` }}
                                     ></div>
                                 </div>
+
+                                {/* --- RENDER CERTIFICATE BUTTON IF 100% --- */}
+                                {c.percentage === 100 && (
+                                    <CertificateDownloader
+                                        userName={fullName}
+                                        courseName={c.courseName}
+                                    />
+                                )}
                             </div>
                         ))}
                     </div>

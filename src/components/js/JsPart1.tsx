@@ -1,19 +1,19 @@
 import { useState } from "react";
-import { saveProgress } from "../../services/course"; // Adjust path if needed
-import { FileJson, CheckCircle, Code, Box, Type, Hash, ToggleLeft } from "lucide-react";
+import { saveProgress } from "../../services/course";
+import { FileJson, CheckCircle, Box, Globe, Server,
+    Calculator, Scale, AlertTriangle, List, Braces } from "lucide-react";
 
 export default function JsPart1({ onDone }: { onDone: () => void }) {
     const [checked, setChecked] = useState(false);
 
     const handleDone = async () => {
-        // Assume you have a "js" entry in your DB, or change to "javascript"
         await saveProgress("js", 1);
         onDone();
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
-            <div className="max-w-3xl w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 rounded-2xl">
+            <div className="max-w-4xl w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
 
                 {/* Header */}
                 <div className="bg-slate-800/50 p-6 border-b border-slate-800 flex items-center gap-3">
@@ -21,82 +21,177 @@ export default function JsPart1({ onDone }: { onDone: () => void }) {
                         <FileJson className="w-6 h-6 text-yellow-400" />
                     </div>
                     <h2 className="text-2xl font-bold text-slate-100 tracking-tight">
-                        JavaScript මූලික දැනුම <span className="text-slate-500 text-lg font-normal ml-1">(Part 1)</span>
+                        JavaScript Basics <span className="text-slate-500 text-lg font-normal ml-1">(Intro, Vars, Types & Operators)</span>
                     </h2>
                 </div>
 
-                <div className="p-6 space-y-8">
+                <div className="p-6 space-y-10">
 
-                    {/* Intro */}
-                    <div className="space-y-3">
-                        <p className="text-slate-300 leading-loose text-lg">
-                            <span className="font-bold text-yellow-400">JavaScript</span> යනු වෙබ් පිටු වලට "පණ දෙන" භාෂාවයි.
-                            HTML වලින් සැකිල්ලත් (Skeleton), CSS වලින් පෙනුමත් (Skin), JavaScript වලින් ක්‍රියාකාරීත්වයත් (Brain) ලබා දෙයි.
+                    {/* Section 1: Intro & Runtime */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-slate-200">1. JavaScript ක්‍රියා කරන ආකාරය</h3>
+
+                        <p className="text-slate-300 text-sm">
+                            JavaScript යනු වෙබ් පිටු වලට "පණ දෙන" (Dynamic Interactions) භාෂාවයි. එය ප්‍රධාන වශයෙන් ස්ථාන දෙකක ධාවනය වේ:
                         </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800 flex gap-3 items-start">
+                                <Globe className="w-5 h-5 text-blue-400 mt-1" />
+                                <div>
+                                    <h4 className="text-slate-200 font-bold text-sm">Browser (Client-side)</h4>
+                                    <p className="text-xs text-slate-400 mt-1">Chrome, Firefox වැනි browser එක තුල ධාවනය වේ. (UI, Animations, Validations)</p>
+                                </div>
+                            </div>
+                            <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800 flex gap-3 items-start">
+                                <Server className="w-5 h-5 text-green-400 mt-1" />
+                                <div>
+                                    <h4 className="text-slate-200 font-bold text-sm">Node.js (Server-side)</h4>
+                                    <p className="text-xs text-slate-400 mt-1">Browser එකෙන් පිටත, Server එකක් ලෙස backend සෑදීමට භාවිතා කරයි.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Variables Section */}
+                    <div className="h-px bg-slate-800" />
+
+                    {/* Section 2: Variables */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
-                            <Box className="w-5 h-5 text-yellow-400" /> Variables (විචල්‍යයන්)
+                            <Box className="w-5 h-5 text-yellow-400" /> 2. Variables (විචල්‍යයන්)
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
-                                <code className="text-blue-400 font-bold">let</code>
-                                <p className="text-xs text-slate-400 mt-2">අගය පසුව වෙනස් කළ හැකි දත්ත තැන්පත් කිරීමට.</p>
+
+
+                        <div className="overflow-hidden rounded-xl border border-slate-800">
+                            <table className="w-full text-sm text-left text-slate-300">
+                                <thead className="text-xs text-slate-400 uppercase bg-slate-950">
+                                <tr>
+                                    <th className="px-4 py-3">Keyword</th>
+                                    <th className="px-4 py-3">Change Value?</th>
+                                    <th className="px-4 py-3">Scope</th>
+                                    <th className="px-4 py-3">Status</th>
+                                </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800 bg-slate-950/50">
+                                <tr>
+                                    <td className="px-4 py-3 font-mono text-purple-400">const</td>
+                                    <td className="px-4 py-3 text-red-400">No (බැහැ)</td>
+                                    <td className="px-4 py-3">Block</td>
+                                    <td className="px-4 py-3 text-emerald-400 font-bold">Best ✔️</td>
+                                </tr>
+                                <tr>
+                                    <td className="px-4 py-3 font-mono text-blue-400">let</td>
+                                    <td className="px-4 py-3 text-emerald-400">Yes (පුළුවන්)</td>
+                                    <td className="px-4 py-3">Block</td>
+                                    <td className="px-4 py-3 text-emerald-400">Good ✔️</td>
+                                </tr>
+                                <tr>
+                                    <td className="px-4 py-3 font-mono text-slate-500">var</td>
+                                    <td className="px-4 py-3 text-emerald-400">Yes (පුළුවන්)</td>
+                                    <td className="px-4 py-3">Function</td>
+                                    <td className="px-4 py-3 text-red-500">Avoid ❌</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div className="h-px bg-slate-800" />
+
+                    {/* Section 3: Data Types */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-slate-200">3. Data Types</h3>
+
+
+                        [Image of JavaScript data types chart]
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-800 flex flex-col gap-1">
+                                <span className="text-xs text-slate-500">String (Text)</span>
+                                <code className="text-yellow-200">let name = "John";</code>
                             </div>
-                            <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
-                                <code className="text-purple-400 font-bold">const</code>
-                                <p className="text-xs text-slate-400 mt-2">අගය කිසිවිටකත් වෙනස් නොවන දත්ත සඳහා.</p>
+                            <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-800 flex flex-col gap-1">
+                                <span className="text-xs text-slate-500">Number</span>
+                                <code className="text-blue-300">let age = 25;</code>
                             </div>
-                            <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800 opacity-60">
-                                <code className="text-slate-500 font-bold">var</code>
-                                <p className="text-xs text-slate-500 mt-2">පරණ ක්‍රමයකි. දැන් භාවිතා කිරීම අඩුයි.</p>
+                            <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-800 flex flex-col gap-1">
+                                <span className="text-xs text-slate-500">Boolean</span>
+                                <code className="text-purple-300">let isOnline = true;</code>
+                            </div>
+                            <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-800 flex flex-col gap-1">
+                                <div className="flex items-center gap-2 text-xs text-slate-500"><List className="w-3 h-3"/> Array</div>
+                                <code className="text-green-300">let list = [1, 2, 3];</code>
+                            </div>
+                            <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-800 flex flex-col gap-1">
+                                <div className="flex items-center gap-2 text-xs text-slate-500"><Braces className="w-3 h-3"/> Object</div>
+                                <code className="text-orange-300">let user = {"{ name: 'A' }"};</code>
+                            </div>
+                            <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-800 flex flex-col gap-1">
+                                <span className="text-xs text-slate-500">Undefined / Null</span>
+                                <code className="text-slate-400">let x; // undefined</code>
                             </div>
                         </div>
                     </div>
 
-                    {/* Data Types Grid */}
+                    <div className="h-px bg-slate-800" />
+
+                    {/* Section 4: Operators */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
-                            <Hash className="w-5 h-5 text-yellow-400" /> Data Types
+                            <Calculator className="w-5 h-5 text-yellow-400" /> 4. Operators
                         </h3>
-                        <div className="bg-slate-950/50 rounded-xl border border-slate-800 p-4 space-y-3">
-                            <div className="flex items-center gap-3">
-                                <Type className="w-4 h-4 text-green-400" />
-                                <span className="text-slate-300 w-20 font-semibold">String</span>
-                                <code className="text-yellow-200 bg-slate-900 px-2 py-1 rounded">"Hello"</code>
-                                <span className="text-xs text-slate-500 ml-auto hidden sm:block">අකුරු සඳහා</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <Hash className="w-4 h-4 text-blue-400" />
-                                <span className="text-slate-300 w-20 font-semibold">Number</span>
-                                <code className="text-yellow-200 bg-slate-900 px-2 py-1 rounded">25, 3.14</code>
-                                <span className="text-xs text-slate-500 ml-auto hidden sm:block">ඉලක්කම් සඳහා</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <ToggleLeft className="w-4 h-4 text-orange-400" />
-                                <span className="text-slate-300 w-20 font-semibold">Boolean</span>
-                                <code className="text-yellow-200 bg-slate-900 px-2 py-1 rounded">true, false</code>
-                                <span className="text-xs text-slate-500 ml-auto hidden sm:block">ඇත්ත/නැත්ත සඳහා</span>
+
+                        {/* Arithmetic */}
+                        <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+                            <h4 className="text-sm font-bold text-slate-300 mb-2">Arithmetic (ගණිතමය)</h4>
+                            <div className="flex flex-wrap gap-4 text-sm font-mono text-blue-300">
+                                <span>+ Add</span>
+                                <span>- Sub</span>
+                                <span>* Mul</span>
+                                <span>/ Div</span>
+                                <span>% Remainder</span>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Code Block */}
-                    <div className="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
-                        <div className="bg-slate-900/50 px-4 py-2 border-b border-slate-800 flex items-center gap-2">
-                            <Code className="w-4 h-4 text-yellow-400" />
-                            <span className="text-xs font-medium text-slate-500 uppercase">Example Code</span>
+                        {/* Comparison - Highlighted */}
+                        <div className="bg-slate-900 border border-yellow-500/20 p-4 rounded-xl relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500"></div>
+                            <div className="flex items-start gap-3">
+                                <Scale className="w-5 h-5 text-yellow-500 mt-1" />
+                                <div className="space-y-2 w-full">
+                                    <h4 className="text-sm font-bold text-slate-200">Comparison (සංසන්දනය)</h4>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="bg-slate-950 p-2 rounded border border-slate-800">
+                                            <div className="flex justify-between text-xs mb-1">
+                                                <span className="text-red-400 font-bold">==</span>
+                                                <span className="text-slate-500">Value check only</span>
+                                            </div>
+                                            <code className="text-xs text-slate-300">5 == "5" // true</code>
+                                        </div>
+
+                                        <div className="bg-slate-950 p-2 rounded border border-slate-800">
+                                            <div className="flex justify-between text-xs mb-1">
+                                                <span className="text-green-400 font-bold">===</span>
+                                                <span className="text-slate-500">Value + Type check</span>
+                                            </div>
+                                            <code className="text-xs text-slate-300">5 === "5" // false</code>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-xs text-yellow-500/80 mt-1">
+                                        <AlertTriangle className="w-3 h-3" />
+                                        <span>Always use <strong>===</strong> to avoid bugs!</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="p-4 overflow-x-auto">
-                            <pre className="font-mono text-sm text-blue-300">
-{`let name = "Kasun";
-const age = 24;
-let isStudent = true;
 
-console.log(name); // Output: Kasun`}
-                            </pre>
+                        {/* Logical */}
+                        <div className="flex gap-2">
+                            <span className="px-3 py-1 bg-slate-800 rounded text-xs text-slate-300 border border-slate-700">&& (AND)</span>
+                            <span className="px-3 py-1 bg-slate-800 rounded text-xs text-slate-300 border border-slate-700">|| (OR)</span>
+                            <span className="px-3 py-1 bg-slate-800 rounded text-xs text-slate-300 border border-slate-700">! (NOT)</span>
                         </div>
                     </div>
 

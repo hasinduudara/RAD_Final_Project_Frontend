@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { saveProgress } from "../../services/course";
-import {
-    BookOpen,
-    CheckCircle,
-    Hash,
-    Palette,
-    Layers,
-    Braces
-} from "lucide-react";
+import { BookOpen, CheckCircle, Hash, Palette, Layers, Braces } from "lucide-react";
 
 export default function CssPart1({ onDone }: { onDone: () => void }) {
     const [completed, setCompleted] = useState(false);

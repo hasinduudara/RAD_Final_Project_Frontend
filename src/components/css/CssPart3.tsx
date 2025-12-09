@@ -1,14 +1,6 @@
 import { useState } from "react";
 import { saveProgress } from "../../services/course";
-import {
-    Grid3X3,
-    Type,
-    Image,
-    Smartphone,
-    CheckCircle,
-    Code,
-    LayoutTemplate
-} from "lucide-react";
+import { Grid3X3, Type, Image, Smartphone, CheckCircle, Code, LayoutTemplate } from "lucide-react";
 
 export default function CssPart3({ onDone }: { onDone: () => void }) {
     const [completed, setCompleted] = useState(false);

@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { saveProgress } from "../../services/course";
-import {
-    Box,
-    Layout,
-    Move,
-    CheckCircle,
-    Code,
-    Grid
-} from "lucide-react";
+import { Box, Layout, Move, CheckCircle, Code, Grid } from "lucide-react";
 
 export default function CssPart2({ onDone }: { onDone: () => void }) {
     const [completed, setCompleted] = useState(false);

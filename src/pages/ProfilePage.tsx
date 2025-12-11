@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Camera, User, Mail, Save, Lock, Loader2, Award } from "lucide-react"; // Import icons
 import Header from "../components/Header";
 import { updateUser, uploadProfileImage } from "../services/user";
 import { getCourseProgress } from "../services/course";
@@ -10,16 +11,25 @@ import CertificateDownloader from "../components/CertificateDownloader";
 interface CourseProgress {
     id: string;
     courseName: string;
-    percentage: number;
+    percentage?: number;
+    completedParts?: number[];
 }
 
 export default function ProfilePage() {
     const dispatch = useDispatch<AppDispatch>();
     const user = useSelector((state: RootState) => state.user.user);
+
+    // UI State for inputs
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
+
+    // Loading states
     const [uploading, setUploading] = useState(false);
+    const [saving, setSaving] = useState(false); // Added separate saving state
     const [progress, setProgress] = useState<CourseProgress[]>([]);
+
+    // Ref for hidden file input
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (user) {
@@ -32,12 +42,41 @@ export default function ProfilePage() {
         (async () => {
             try {
                 const courseData = await getCourseProgress();
-                setProgress(courseData);
+                console.log("Course Progress Data:", courseData);
+
+                // Ensure percentage exists and is a number, calculate it if needed
+                const normalizedData = (courseData as CourseProgress[]).map((course) => {
+                    let percentage = course.percentage;
+
+                    // If percentage is missing or invalid, calculate it from completedParts
+                    if (percentage === undefined || percentage === null || isNaN(percentage)) {
+                        // Each course has 3 parts, calculate percentage based on completed parts
+                        if (course.completedParts && Array.isArray(course.completedParts)) {
+                            const completedCount = course.completedParts.length;
+                            percentage = Math.round((completedCount / 3) * 100);
+                        } else {
+                            percentage = 0;
+                        }
+                    }
+
+                    return {
+                        ...course,
+                        percentage: Math.round(percentage)
+                    };
+                });
+
+                console.log("Normalized Progress Data:", normalizedData);
+                setProgress(normalizedData);
             } catch (error) {
                 console.error("Error loading course progress:", error);
             }
         })();
     }, []);
+
+    // Trigger hidden file input click
+    const handleImageClick = () => {
+        fileInputRef.current?.click();
+    };
 
     const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -46,10 +85,7 @@ export default function ProfilePage() {
         setUploading(true);
         try {
             const url = await uploadProfileImage(file);
-            console.log("Uploaded image URL:", url);
-
             const response = await updateUser({ fullName, email, profileImage: url });
-            console.log("Update response:", response);
 
             if (response.success) {
                 const updatedUser = response.user;
@@ -57,129 +93,200 @@ export default function ProfilePage() {
                     dispatch(updateProfileImageAction(updatedUser.profileImage));
                 }
             }
-
             alert("Profile picture updated successfully!");
         } catch (error) {
             console.error("Failed to upload image:", error);
-            alert("Failed to upload profile picture. Please try again.");
+            alert("Failed to upload profile picture.");
         } finally {
             setUploading(false);
         }
     };
 
     const handleSave = async () => {
+        setSaving(true);
         try {
             const response = await updateUser({ fullName, email, profileImage: user?.profileImage });
-            console.log("Save response:", response);
             if (response.success) {
                 alert("Profile updated successfully");
             }
         } catch (error) {
             console.error("Failed to save profile:", error);
-            alert("Failed to update profile. Please try again.");
+            alert("Failed to update profile.");
+        } finally {
+            setSaving(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white">
+        <div className="min-h-screen bg-gray-950 text-white font-sans">
             <Header />
 
-            <div className="max-w-3xl mx-auto px-6 py-10">
-                <h1 className="text-3xl font-bold mb-6">Profile Settings</h1>
+            <div className="max-w-6xl mx-auto px-4 py-12">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                {/* Image Upload */}
-                <div className="mb-6">
-                    <label className="block mb-2 font-semibold">Profile Picture</label>
-                    <input type="file" accept="image/*" onChange={handleImage} />
+                    {/* LEFT COLUMN: User Details Card */}
+                    <div className="lg:col-span-1">
+                        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800 shadow-xl sticky top-24">
 
-                    {uploading && <p className="mt-2 text-sm text-yellow-400">Uploading...</p>}
-
-                    {user?.profileImage && (
-                        <div>
-                            <img
-                                src={user.profileImage}
-                                alt="Profile"
-                                className="w-32 h-32 rounded-full mt-4 border border-gray-700 object-cover"
-                            />
-                        </div>
-                    )}
-                </div>
-
-                {/* Form */}
-                <div className="space-y-4 mb-6">
-                    <div>
-                        <label className="block mb-1 font-semibold">Name</label>
-                        <input
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                            className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-700 focus:outline-none"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block mb-1 font-semibold">Email</label>
-                        <input
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-700 focus:outline-none"
-                        />
-                    </div>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={handleSave}
-                        className="px-5 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold"
-                    >
-                        Save Changes
-                    </button>
-
-                    <a
-                        href="/forgot-password"
-                        className="px-5 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg font-semibold"
-                    >
-                        Reset Password
-                    </a>
-                </div>
-
-                {/* Course Progress */}
-                <div className="mt-12">
-                    <h2 className="text-2xl font-bold mb-4">Course Progress</h2>
-
-                    {progress.length === 0 && (
-                        <p className="text-gray-400">No ongoing courses.</p>
-                    )}
-
-                    <div className="space-y-4">
-                        {progress.map((c) => (
-                            <div key={c.id} className="p-4 bg-gray-800 rounded-xl border border-gray-700">
-                                <div className="flex justify-between mb-1 items-end">
-                                    <div>
-                                        <span className="font-semibold block">{c.courseName}</span>
-                                        {c.percentage === 100 && (
-                                            <span className="text-xs text-green-400 font-bold">Course Completed</span>
+                            {/* Avatar Section */}
+                            <div className="flex flex-col items-center mb-8">
+                                <div className="relative group cursor-pointer" onClick={handleImageClick}>
+                                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-800 shadow-lg group-hover:border-blue-500 transition-colors duration-300">
+                                        {user?.profileImage ? (
+                                            <img
+                                                src={user.profileImage}
+                                                alt="Profile"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-500">
+                                                <User size={48} />
+                                            </div>
                                         )}
                                     </div>
-                                    <span className="text-sm text-gray-300">{c.percentage}%</span>
-                                </div>
 
-                                <div className="w-full h-2 bg-gray-700 rounded mb-2">
-                                    <div
-                                        className="h-2 bg-green-500 rounded"
-                                        style={{ width: `${c.percentage}%` }}
-                                    ></div>
-                                </div>
-
-                                {/* --- RENDER CERTIFICATE BUTTON IF 100% --- */}
-                                {c.percentage === 100 && (
-                                    <CertificateDownloader
-                                        userName={fullName}
-                                        courseName={c.courseName}
+                                    {/* Upload Overlay */}
+                                    <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        {uploading ? (
+                                            <Loader2 className="w-8 h-8 text-white animate-spin" />
+                                        ) : (
+                                            <Camera className="w-8 h-8 text-white" />
+                                        )}
+                                    </div>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={handleImage}
                                     />
-                                )}
+                                </div>
+                                <h2 className="mt-4 text-xl font-bold text-gray-100">{fullName || "User"}</h2>
+                                <p className="text-gray-400 text-sm">{email}</p>
                             </div>
-                        ))}
+
+                            {/* Form Inputs */}
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-400 pl-1">Full Name</label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
+                                        <input
+                                            value={fullName}
+                                            onChange={(e) => setFullName(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all placeholder-gray-600 text-white"
+                                            placeholder="Your Name"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-400 pl-1">Email Address</label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
+                                        <input
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all placeholder-gray-600 text-white"
+                                            placeholder="you@example.com"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="mt-8 space-y-3">
+                                <button
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-900/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                                >
+                                    {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4" />}
+                                    Save Changes
+                                </button>
+
+                                <a
+                                    href="/forgot-password"
+                                    className="w-full flex items-center justify-center gap-2 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl font-medium text-gray-300 transition-colors"
+                                >
+                                    <Lock className="w-4 h-4" />
+                                    Reset Password
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: Course Progress */}
+                    <div className="lg:col-span-2">
+                        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800 shadow-xl min-h-[500px]">
+                            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                                <Award className="text-yellow-500" />
+                                My Learning Journey
+                            </h2>
+
+                            {progress.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                                    <p className="text-lg">No courses started yet.</p>
+                                    <a href="/courses" className="mt-4 text-blue-400 hover:underline">Explore Courses &rarr;</a>
+                                </div>
+                            ) : (
+                                <div className="space-y-5">
+                                    {progress.map((c) => (
+                                        <div key={c.id} className="group relative p-5 bg-gray-800/50 hover:bg-gray-800 rounded-xl border border-gray-700 transition-all duration-300 hover:shadow-md hover:border-gray-600">
+
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div>
+                                                    <h3 className="font-bold text-lg text-gray-100 group-hover:text-blue-400 transition-colors">
+                                                        {c.courseName}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-400 mt-1">
+                                                        {(c.percentage ?? 0) === 100 ? "Completed" : "In Progress"}
+                                                    </p>
+                                                </div>
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                    (c.percentage ?? 0) === 100
+                                                        ? "bg-green-500/20 text-green-400"
+                                                        : "bg-blue-500/20 text-blue-400"
+                                                }`}>
+                                                    {c.percentage ?? 0}%
+                                                </span>
+                                            </div>
+
+                                            {/* Progress Bar */}
+                                            <div className="w-full h-2.5 bg-gray-700 rounded-full overflow-hidden mb-4">
+                                                <div
+                                                    className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                                                        (c.percentage ?? 0) === 100 ? "bg-green-500" : "bg-gradient-to-r from-blue-600 to-blue-400"
+                                                    }`}
+                                                    style={{ width: `${c.percentage ?? 0}%` }}
+                                                ></div>
+                                            </div>
+
+                                            {/* Footer / Actions */}
+                                            <div className="flex justify-end pt-2 border-t border-gray-700/50">
+                                                {(c.percentage ?? 0) === 100 ? (
+                                                    <div className="transform transition-transform hover:scale-105">
+                                                        <CertificateDownloader
+                                                            userName={fullName}
+                                                            course={
+                                                                c.courseName.toLowerCase().includes('html') ? 'html' :
+                                                                c.courseName.toLowerCase().includes('css') ? 'css' :
+                                                                c.courseName.toLowerCase().includes('javascript') || c.courseName.toLowerCase().includes('js') ? 'js' :
+                                                                'html' // default fallback
+                                                            }
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <button className="text-sm text-gray-400 hover:text-white transition-colors">
+                                                        Continue Learning &rarr;
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

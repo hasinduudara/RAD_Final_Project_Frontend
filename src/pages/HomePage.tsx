@@ -8,7 +8,7 @@ export default function HomePage() {
     const courses = [
         {
             title: "HTML",
-            desc: "HTML කියන්නේ website එකක මාළු骨ය වගේ. Web page එකක content ගොඩනගන markup එක මෙහෙමයි.",
+            desc: "HTML කියන්නේ website එකක සැකිල්ල වගේ. Web page එකක content ගොඩනගන markup එක මෙහෙමයි.",
             route: "/html-course",
         },
         {
@@ -18,7 +18,7 @@ export default function HomePage() {
         },
         {
             title: "JavaScript",
-            desc: "JavaScript යනු website එකට සිරිත, ක්‍රියාකාරිත්වය හා හැසිරීම ලබා දෙන programming භාෂාව.",
+            desc: "JavaScript යනු website එකට ක්‍රියාකාරිත්වය හා හැසිරීම ලබා දෙන programming භාෂාව.",
             route: "/javascript-courses",
         },
     ];
@@ -33,8 +33,7 @@ export default function HomePage() {
                 <p className="max-w-2xl mx-auto text-lg text-center mb-12 text-gray-300 leading-relaxed">
                     Language Hub මගින් ඔබට HTML, CSS සහ JavaScript
                     යන Web Development මූලික දැනුම් සරලව, පහසුවෙන්
-                    ඉගෙන ගත හැක. පහළින් ඉන්න courses තුනෙන් යාමක්
-                    තෝරන්න.
+                    ඉගෙන ගත හැක. ඔබට අවශ්‍ය courses එක පහලින් තෝරගන්න.
                 </p>
 
                 {/* Course Cards */}

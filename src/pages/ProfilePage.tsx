@@ -42,30 +42,30 @@ export default function ProfilePage() {
         (async () => {
             try {
                 const courseData = await getCourseProgress();
-                console.log("Course Progress Data:", courseData);
 
-                // Ensure percentage exists and is a number, calculate it if needed
+                // Normalization Logic
                 const normalizedData = (courseData as CourseProgress[]).map((course) => {
-                    let percentage = course.percentage;
+                    let percentage = 0;
 
-                    // If percentage is missing or invalid, calculate it from completedParts
-                    if (percentage === undefined || percentage === null || isNaN(percentage)) {
-                        // Each course has 3 parts, calculate percentage based on completed parts
-                        if (course.completedParts && Array.isArray(course.completedParts)) {
-                            const completedCount = course.completedParts.length;
-                            percentage = Math.round((completedCount / 3) * 100);
-                        } else {
-                            percentage = 0;
-                        }
+                    // Check if completedParts exists and is an array
+                    if (course.completedParts && Array.isArray(course.completedParts)) {
+                        // REMOVE DUPLICATES (Just in case DB has [1, 1, 2])
+                        const uniqueParts = [...new Set(course.completedParts)];
+                        const completedCount = uniqueParts.length;
+
+                        // Total parts is 3. Calculate %
+                        percentage = Math.round((completedCount / 3) * 100);
+
+                        // Cap at 100%
+                        if (percentage > 100) percentage = 100;
                     }
 
                     return {
                         ...course,
-                        percentage: Math.round(percentage)
+                        percentage: percentage
                     };
                 });
 
-                console.log("Normalized Progress Data:", normalizedData);
                 setProgress(normalizedData);
             } catch (error) {
                 console.error("Error loading course progress:", error);

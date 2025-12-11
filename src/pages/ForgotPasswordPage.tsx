@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { Mail, ArrowLeft, KeyRound, Loader2, Code2 } from "lucide-react";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -10,88 +11,147 @@ export default function ForgotPasswordPage() {
         e.preventDefault();
         setLoading(true);
 
-        const res = await fetch("http://localhost:5000/api/password/forgot", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email }),
-        });
+        try {
+            const res = await fetch("http://localhost:5000/api/password/forgot", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
 
-        const data = await res.json();
-        setLoading(false);
+            const data = await res.json();
 
-        if (!res.ok) return alert(data.message);
+            if (!res.ok) throw new Error(data.message || "Failed to send reset link");
 
-        localStorage.setItem("resetEmail", email);
-
-        navigate("/verify-otp");
+            localStorage.setItem("resetEmail", email);
+            alert("OTP sent successfully! Please check your email.");
+            navigate("/verify-otp");
+        } catch (error) {
+            alert(error instanceof Error ? error.message : "An error occurred");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="relative flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white overflow-hidden selection:bg-purple-500 selection:text-white">
+        <div className="relative flex flex-col items-center justify-center min-h-screen bg-gray-950 text-white overflow-hidden selection:bg-purple-500/30">
 
             {/* --- 3D Background Animation --- */}
             <style>{`
-                .perspective-container {
-                    perspective: 1000px;
+                @keyframes grid-move {
+                    0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+                    100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
                 }
-                .grid-3d-plane {
-                    position: absolute;
-                    width: 200%;
-                    height: 200%;
-                    left: -50%;
-                    top: -25%;
+                .animate-grid {
+                    animation: grid-move 3s linear infinite;
+                }
+                .bg-grid {
+                    background-size: 50px 50px;
                     background-image: 
-                        linear-gradient(to right, rgba(37, 99, 235, 0.15) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(37, 99, 235, 0.15) 1px, transparent 1px);
-                    background-size: 80px 80px;
-                    transform: rotateX(60deg);
-                    transform-origin: 50% 50%;
-                    animation: grid-movement 10s linear infinite;
-                }
-                @keyframes grid-movement {
-                    0% { transform: rotateX(60deg) translateY(0); }
-                    100% { transform: rotateX(60deg) translateY(80px); }
-                }
-                .fog-overlay {
-                    background: linear-gradient(to bottom, #111827 10%, transparent 40%, transparent 80%, #111827 100%);
+                        linear-gradient(to right, rgba(168, 85, 247, 0.1) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(168, 85, 247, 0.1) 1px, transparent 1px);
                 }
             `}</style>
 
-            <div className="absolute inset-0 perspective-container pointer-events-none">
-                <div className="grid-3d-plane"></div>
-                <div className="absolute inset-0 fog-overlay z-0"></div>
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute inset-0 overflow-hidden">
+                    <div className="absolute -inset-[100%] top-[-50%] bg-grid animate-grid opacity-30 origin-top"></div>
+                </div>
+                {/* Vignette Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-gray-950/20 via-gray-950/60 to-gray-950"></div>
             </div>
-            {/* ------------------------------- */}
 
-            {/* Forgot Password Card (Glass Effect) */}
-            <div className="relative z-10 w-full max-w-md p-8 bg-gray-800/60 backdrop-blur-md border border-gray-700 rounded-2xl shadow-2xl">
+            {/* --- Main Content --- */}
+            <div className="relative z-10 w-full max-w-md px-6">
 
-                <h1 className="text-3xl font-bold mb-6 text-center text-white drop-shadow-md">Forgot Password?</h1>
+                {/* Brand Logo */}
+                <div className="flex justify-center mb-8 animate-fade-in-up">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-900/50 backdrop-blur-md rounded-full border border-gray-800">
+                        <Code2 className="text-purple-500" size={20} />
+                        <span className="font-bold tracking-tight">Language Hub</span>
+                    </div>
+                </div>
 
-                <p className="text-gray-400 text-center mb-6 text-sm">
-                    Enter your email address and we'll send you a link to reset your password.
-                </p>
+                {/* Glass Card */}
+                <div className="bg-gray-900/60 backdrop-blur-xl border border-gray-800 rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up">
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <input
-                            className="w-full p-3 rounded-lg bg-gray-900/80 border border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder-gray-500 text-white"
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
+                    <div className="p-8 pb-0 text-center">
+                        {/* Icon Badge */}
+                        <div className="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-purple-500/20 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]">
+                            <KeyRound className="text-purple-500" size={32} />
+                        </div>
+
+                        <h2 className="text-2xl font-bold mb-2">Forgot Password?</h2>
+                        <p className="text-gray-400 text-sm leading-relaxed">
+                            No worries! Enter your email and we will send you an OTP to reset your password.
+                        </p>
                     </div>
 
-                    <button
-                        className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition duration-300 ease-in-out transform hover:scale-[1.02] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                        type="submit"
-                        disabled={loading}
-                    >
-                        {loading ? "Sending..." : "Send Reset Link"}
-                    </button>
-                </form>
+                    <div className="p-8 pt-6">
+                        <form onSubmit={handleSubmit} className="space-y-6">
+
+                            {/* Email Input */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium text-gray-400 ml-1">Email Address</label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Mail className="h-5 w-5 text-gray-500 group-focus-within:text-purple-500 transition-colors" />
+                                    </div>
+                                    <input
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-950/50 border border-gray-700 text-gray-100 placeholder-gray-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                                        type="email"
+                                        placeholder="you@example.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full relative group overflow-hidden bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg shadow-purple-900/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                <div className="flex items-center justify-center gap-2">
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="animate-spin" size={20} />
+                                            <span>Sending OTP...</span>
+                                        </>
+                                    ) : (
+                                        <span>Send Reset Code</span>
+                                    )}
+                                </div>
+                                {/* Shine effect */}
+                                <div className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-20 group-hover:animate-shine" />
+                            </button>
+                        </form>
+
+                        {/* Divider */}
+                        <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-800"></div>
+                            </div>
+                        </div>
+
+                        {/* Back to Login */}
+                        <div className="text-center">
+                            <Link
+                                to="/login"
+                                className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors group"
+                            >
+                                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                                Back to Login
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Bottom Helper */}
+                <p className="text-center text-gray-600 text-xs mt-8">
+                    © 2025 Language Hub. Account Recovery.
+                </p>
             </div>
         </div>
     );

@@ -9,7 +9,6 @@ export interface User {
     id: string;
     fullName: string;
     email: string;
-    role: string;
     profileImage?: string;
 }
 
@@ -53,14 +52,10 @@ export const loadUserData = createAsyncThunk('user/loadUserData', async () => {
         id: userData.id || userData._id,
         fullName: userData.fullName || '',
         email: userData.email || '',
-        role: userData.role || localStorage.getItem('role') || '',
         profileImage: userData.profileImage || localStorage.getItem('profileImage') || undefined,
     };
 
     // Sync with localStorage
-    if (userObj.role) {
-        localStorage.setItem('role', userObj.role);
-    }
     if (userObj.profileImage) {
         localStorage.setItem('profileImage', userObj.profileImage);
     }
@@ -88,7 +83,6 @@ const userSlice = createSlice({
             state.isAuthenticated = false;
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
-            localStorage.removeItem('role');
             localStorage.removeItem('profileImage');
         },
     },

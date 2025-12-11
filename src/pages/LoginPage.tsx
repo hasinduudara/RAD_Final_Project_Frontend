@@ -25,7 +25,6 @@ export default function LoginPage() {
             // Save tokens & role
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
-            localStorage.setItem("role", data.user.role);
 
             // Save profile image if available
             if (data.user.profileImage) {
@@ -37,19 +36,14 @@ export default function LoginPage() {
                 id: data.user.id || data.user._id,
                 fullName: data.user.fullName,
                 email: data.user.email,
-                role: data.user.role,
                 profileImage: data.user.profileImage,
             };
             dispatch(setUser(userObj));
 
             alert("Login successful!");
 
-            // ROLE-BASED REDIRECT
-            if (data.user.role === "ADMIN") {
-                navigate("/adminpanel");
-            } else {
-                navigate("/home");
-            }
+            // Navigate to home
+            navigate("/home");
 
         } catch (error: unknown) {
             let errorMessage = "Login failed";

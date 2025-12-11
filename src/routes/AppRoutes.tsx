@@ -6,7 +6,6 @@ import ForgotPasswordPage from "../pages/ForgotPasswordPage";
 import HomePage from "../pages/HomePage";
 import VerifyOTPPage from "../pages/VerifyOTPPage";
 import ResetPasswordPage from "../pages/ResetPasswordPage";
-import AdminPanel from "../pages/AdminPanel";
 import ProtectedRoute from "../routes/ProtectedRoute";
 import ProfilePage from "../pages/ProfilePage";
 import ChatPage from "../pages/ChatPage.tsx";
@@ -31,14 +30,6 @@ export default function AppRoutes() {
                 element={
                     <ProtectedRoute>
                         <HomePage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/adminpanel"
-                element={
-                    <ProtectedRoute>
-                        <AdminPanel />
                     </ProtectedRoute>
                 }
             />

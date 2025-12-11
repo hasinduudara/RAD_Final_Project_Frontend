@@ -116,6 +116,7 @@ interface ChatState {
     currentChatId: string | null;
     currentChatMessages: Message[];
     loading: boolean;
+    loadingMessages: boolean;
     sendingMessage: boolean;
 }
 
@@ -124,6 +125,7 @@ const initialChatState: ChatState = {
     currentChatId: null,
     currentChatMessages: [],
     loading: false,
+    loadingMessages: false,
     sendingMessage: false,
 };
 
@@ -185,11 +187,18 @@ const chatSlice = createSlice({
                 state.loading = false;
             })
             // Fetch chat messages
+            .addCase(fetchChatMessages.pending, (state) => {
+                state.loadingMessages = true;
+            })
             .addCase(fetchChatMessages.fulfilled, (state, action) => {
                 state.currentChatMessages = action.payload.messages.map((m: Message) => ({
                     ...m,
                     content: m.content.replace(/[*_`~]/g, "").trim()
                 }));
+                state.loadingMessages = false;
+            })
+            .addCase(fetchChatMessages.rejected, (state) => {
+                state.loadingMessages = false;
             })
             // Create new chat
             .addCase(createNewChat.fulfilled, (state, action) => {

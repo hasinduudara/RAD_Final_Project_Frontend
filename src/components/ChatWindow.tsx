@@ -6,7 +6,7 @@ import type { AppDispatch, RootState } from "../context/userContext";
 
 export default function ChatWindow({ chatId }: { chatId: string }) {
     const dispatch = useDispatch<AppDispatch>();
-    const { currentChatMessages, sendingMessage } = useSelector((state: RootState) => state.chat);
+    const { currentChatMessages, sendingMessage, loadingMessages } = useSelector((state: RootState) => state.chat);
     const [input, setInput] = useState("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +51,7 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
         }
     };
 
-    if (currentChatMessages.length === 0 && !sendingMessage) {
+    if (loadingMessages) {
         return <div className="flex-1 flex items-center justify-center text-gray-500">Loading chat...</div>;
     }
 
@@ -60,19 +60,25 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
-                {currentChatMessages.map((msg, i: number) => (
-                    <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                        <div
-                            className={`max-w-[80%] p-3 rounded-lg text-sm leading-relaxed ${
-                                msg.role === "user"
-                                    ? "bg-green-700 text-white rounded-br-none"
-                                    : "bg-gray-700 text-gray-100 rounded-bl-none"
-                            }`}
-                        >
-                            {msg.content}
-                        </div>
+                {currentChatMessages.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                        <p>No messages yet. Start the conversation!</p>
                     </div>
-                ))}
+                ) : (
+                    currentChatMessages.map((msg, i: number) => (
+                        <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                            <div
+                                className={`max-w-[80%] p-3 rounded-lg text-sm leading-relaxed ${
+                                    msg.role === "user"
+                                        ? "bg-green-700 text-white rounded-br-none"
+                                        : "bg-gray-700 text-gray-100 rounded-bl-none"
+                                }`}
+                            >
+                                {msg.content}
+                            </div>
+                        </div>
+                    ))
+                )}
 
                 {sendingMessage && (
                     <div className="flex justify-start animate-pulse">

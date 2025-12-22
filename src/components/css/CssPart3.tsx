@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { saveProgress } from "../../services/course";
 import { Grid3X3, Type, Image, Smartphone, CheckCircle, Code, LayoutTemplate } from "lucide-react";
 
 export default function CssPart3({ onDone }: { onDone: () => void }) {
     const [completed, setCompleted] = useState(false);
 
-    const handleDone = async () => {
-        await saveProgress("css", 3);
-        onDone();
+    const handleDone = () => {
+        if (!completed) {
+            setCompleted(true);
+            onDone();
+        }
     };
 
     return (
@@ -217,10 +218,7 @@ export default function CssPart3({ onDone }: { onDone: () => void }) {
                 {/* Footer / Action Button */}
                 <div className="p-6 bg-slate-900 border-t border-slate-800">
                     <button
-                        onClick={() => {
-                            setCompleted(true);
-                            handleDone();
-                        }}
+                        onClick={handleDone}
                         disabled={completed}
                         className={`group w-full py-3.5 rounded-xl font-bold shadow-lg transition-all duration-200 flex items-center justify-center gap-2
                             ${completed

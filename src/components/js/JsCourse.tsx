@@ -18,24 +18,35 @@ export default function JsCourse() {
     const userName = user?.fullName || "Student";
 
     useEffect(() => {
+        isMountedRef.current = true;
         return () => {
             isMountedRef.current = false;
         };
     }, []);
 
-    const handlePart1Done = async () => {
+    // Helper: Saves progress but forces a move after 5 seconds if stuck
+    const handleSaveWithTimeout = async (courseName: string, partNumber: number, nextAction: () => void) => {
         setIsSaving(true);
         setError(null);
+
+        // Create a timeout promise that rejects after 5 seconds
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Request timed out")), 5000)
+        );
+
         try {
-            await saveProgress("js", 1);
+            // Race the saveProgress against the timeout
+            await Promise.race([saveProgress(courseName, partNumber), timeoutPromise]);
+
+            // If successful:
             if (isMountedRef.current) {
-                setStep(2);
+                nextAction();
             }
-        } catch (error) {
-            console.error("Failed to save progress", error);
+        } catch (err) {
+            console.error("Save failed or timed out:", err);
+            // Even if it fails, we allow the user to proceed so they don't get stuck
             if (isMountedRef.current) {
-                setError("Failed to save progress. Please try again.");
-                setStep(2);
+                nextAction();
             }
         } finally {
             if (isMountedRef.current) {
@@ -44,46 +55,16 @@ export default function JsCourse() {
         }
     };
 
-    const handlePart2Done = async () => {
-        setIsSaving(true);
-        setError(null);
-        try {
-            await saveProgress("js", 2);
-            if (isMountedRef.current) {
-                setStep(3);
-            }
-        } catch (error) {
-            console.error("Failed to save progress", error);
-            if (isMountedRef.current) {
-                setError("Failed to save progress. Please try again.");
-                setStep(3);
-            }
-        } finally {
-            if (isMountedRef.current) {
-                setIsSaving(false);
-            }
-        }
+    const handlePart1Done = () => {
+        handleSaveWithTimeout("js", 1, () => setStep(2));
     };
 
-    const handlePart3Done = async () => {
-        setIsSaving(true);
-        setError(null);
-        try {
-            await saveProgress("js", 3);
-            if (isMountedRef.current) {
-                setIsCompleted(true);
-            }
-        } catch (error) {
-            console.error("Failed to save progress", error);
-            if (isMountedRef.current) {
-                setError("Failed to save progress. Please try again.");
-                setIsCompleted(true);
-            }
-        } finally {
-            if (isMountedRef.current) {
-                setIsSaving(false);
-            }
-        }
+    const handlePart2Done = () => {
+        handleSaveWithTimeout("js", 2, () => setStep(3));
+    };
+
+    const handlePart3Done = () => {
+        handleSaveWithTimeout("js", 3, () => setIsCompleted(true));
     };
 
     return (
@@ -96,7 +77,8 @@ export default function JsCourse() {
                 )}
 
                 {isSaving && (
-                    <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500 rounded-lg text-blue-400">
+                    <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500 rounded-lg text-blue-400 flex items-center gap-2">
+                        <span className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></span>
                         Saving your progress...
                     </div>
                 )}

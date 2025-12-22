@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { saveProgress } from "../../services/course";
 import { GitBranch, CheckCircle, Repeat, FunctionSquare, List, Cpu } from "lucide-react";
 
 export default function JsPart2({ onDone }: { onDone: () => void }) {
     const [checked, setChecked] = useState(false);
 
-    const handleDone = async () => {
-        await saveProgress("js", 2);
-        onDone();
+    const handleDone = () => {
+        if (!checked) {
+            setChecked(true);
+            onDone();
+        }
     };
 
     return (
@@ -205,10 +206,7 @@ export default function JsPart2({ onDone }: { onDone: () => void }) {
                 {/* Footer */}
                 <div className="p-6 bg-slate-900 border-t border-slate-800">
                     <button
-                        onClick={() => {
-                            setChecked(true);
-                            handleDone();
-                        }}
+                        onClick={handleDone}
                         disabled={checked}
                         className={`group w-full py-3.5 rounded-xl font-bold shadow-lg transition-all duration-200 flex items-center justify-center gap-2
                             ${checked

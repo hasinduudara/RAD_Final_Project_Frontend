@@ -28,6 +28,9 @@ A modern, interactive web application for learning web development technologies 
 - **UI Icons**: Lucide React 0.553.0
 - **Notifications**: React Hot Toast 2.6.0
 
+## 🔴 Live Demo
+A live demo of the application is available at: [Language Hub Live Demo](https://test-vercel-new-fe.vercel.app/)
+
 ## 📋 Prerequisites
 
 - Node.js (v18 or higher recommended)

@@ -34,8 +34,6 @@ export default function ChatPage() {
             {/* 2. Main Layout */}
             <div className="flex flex-1 overflow-hidden relative">
 
-                {/* Sidebar - (Hidden on mobile, visible on medium screens+) */}
-                {/* Note: The ChatList component itself handles some width, but we wrap it to ensure layout stability */}
                 <div className="hidden md:flex flex-col h-full border-r border-gray-800 bg-gray-950 z-10">
                     <ChatList
                         chats={chats}

@@ -46,9 +46,6 @@ export default function HtmlCourse() {
             console.error("Save failed or timed out:", err);
             // Even if it fails, we allow the user to proceed so they don't get stuck
             if (isMountedRef.current) {
-                // Optional: Show error only if you want to stop them.
-                // Here we let them continue but maybe log the error.
-                // setError("Could not save progress automatically.");
                 nextAction();
             }
         } finally {

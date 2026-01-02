@@ -241,7 +241,7 @@ For a complete list of dependencies, see `package.json`.
 
 ## 🆘 Support
 
-For issues or questions, please open an issue in the repository or contact the development team.
+For support, email hasiduudara@gmail.com or open an issue in the repository.
 
 ---
 

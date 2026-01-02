@@ -31,6 +31,8 @@ A modern, interactive web application for learning web development technologies 
 ## 🔴 Live Demo
 A live demo of the application is available at: [Language Hub Live Demo](https://test-vercel-new-fe.vercel.app/)
 
+Make sure to also check out the Backend repository for this project: [Language Hub Backend](https://github.com/hasinduudara/RAD_Final_Project_Backend.git)
+
 ## 📋 Prerequisites
 
 - Node.js (v18 or higher recommended)

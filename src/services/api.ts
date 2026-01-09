@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 import { refreshTokens } from "./user.ts";
 
 // Axios instance
@@ -37,7 +37,7 @@ api.interceptors.response.use(
         return response;
     },
     async (error: AxiosError) => {
-        const originalRequest: any = error.config;
+        const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
         // If token expired → refresh
         if (
@@ -47,20 +47,25 @@ api.interceptors.response.use(
         ) {
             originalRequest._retry = true;
 
+            const refreshToken = localStorage.getItem("refreshToken");
+
+            if (!refreshToken) {
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+                window.location.href = "/login";
+                return Promise.reject(new Error("No refresh token available"));
+            }
+
             try {
-                const refreshToken = localStorage.getItem("refreshToken");
-
-                if (!refreshToken) {
-                    throw new Error("No refresh token available");
-                }
-
                 const data = await refreshTokens(refreshToken);
 
                 // Save new token
                 localStorage.setItem("accessToken", data.accessToken);
 
                 // Add new token to header
-                originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+                if (originalRequest.headers) {
+                    originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+                }
 
                 return axios(originalRequest);
             } catch (refreshError) {
